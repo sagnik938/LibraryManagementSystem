@@ -134,13 +134,13 @@
                             <div class="col-md-4">
                                 <label>Old Password</label>
                                 <div class="form-group">
-                                    <asp:TextBox class="form-control" ID="TextBox9" runat="server" placeholder="Email ID" TextMode="Password" ReadOnly="True"></asp:TextBox>
+                                    <asp:TextBox class="form-control" ID="TextBox9" runat="server" placeholder="Old Password" ReadOnly="True"></asp:TextBox>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <label>New Password</label>
                                 <div class="form-group">
-                                    <asp:TextBox class="form-control" ID="TextBox10" runat="server" placeholder="Email ID" TextMode="Password"></asp:TextBox>
+                                    <asp:TextBox class="form-control" ID="TextBox10" runat="server" placeholder="New Password" TextMode="Password"></asp:TextBox>
                                 </div>
                             </div>
                         </div>
@@ -150,7 +150,7 @@
                                     <div class="form-group">
                                         <div class="d-grid gap-2">
                                             <br />
-                                                <asp:Button class="btn btn-primary" ID="Button1" runat="server" Text="Update" />
+                                                <asp:Button class="btn btn-primary" ID="Button1" runat="server" Text="Update" OnClick="Button1_Click" />
                                             </div>
                                     </div>
                                 </center>

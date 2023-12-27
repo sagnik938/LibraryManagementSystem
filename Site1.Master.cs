@@ -137,5 +137,10 @@ namespace ELibraryManagement
             queryRunner.DoLogout(Session);
             Response.Redirect("Homepage.aspx");
         }
+
+        protected void LinkButton7_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("userprofile.aspx");
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using ELibraryManagement.enums;
+using ELibraryManagement.Models;
 using ELibraryManagement.SQL;
 using System;
 using System.Collections.Generic;
@@ -23,19 +24,22 @@ namespace ELibraryManagement
         //sign up click
         protected void Button1_Click(object sender, EventArgs e)
         {
-            Member member = new Member(
-                                        TextBox1.Text,
-                                        TextBox2.Text,
-                                        TextBox3.Text,
-                                        TextBox4.Text,
-                                        DropDownList1.SelectedItem.Value,
-                                        TextBox6.Text,
-                                        TextBox7.Text,
-                                        TextBox5.Text,
-                                        TextBox8.Text,
-                                        TextBox9.Text,
-                                        AccountTypes.PENDING.ToString()
-                                      );
+            MemberDTO member = new MemberDTO
+            {
+                FullName = TextBox1.Text,
+                DOB = TextBox2.Text,
+                ContactNo = TextBox3.Text,
+                EmailId = TextBox4.Text,
+                State = DropDownList1.SelectedValue,
+                City = TextBox6.Text,
+                Pincode = TextBox7.Text,
+                FullAddress = TextBox5.Text,
+                MemberId = TextBox8.Text,
+                Password = TextBox9.Text,
+                AccountStatus = AccountTypes.PENDING.ToString()
+                // You may set default values for other properties if needed
+            };
+
             try
             {
                 if( queryRunner.CheckUsernameAvailability(member.MemberId) )

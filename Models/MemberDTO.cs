@@ -17,6 +17,7 @@ namespace ELibraryManagement.Models
         public string City { get; set; }
         public string Pincode { get; set; }
         public string FullAddress { get; set; }
+        public string Password { get; set; }
 
         public MemberDTO( string memberId , string fullName , string accountStatus , string dob , string contactNo , string emailId , string state , string city , string pincode , string fullAddress)
         {
@@ -30,6 +31,21 @@ namespace ELibraryManagement.Models
             this.City = city;
             this.Pincode = pincode;
             this.FullAddress = fullAddress;
+        }
+
+        public MemberDTO(string memberId, string fullName, string accountStatus, string dob, string contactNo, string emailId, string state, string city, string pincode, string fullAddress , string password)
+        {
+            this.MemberId = memberId;
+            this.FullName = fullName;
+            this.AccountStatus = accountStatus;
+            this.DOB = dob;
+            this.ContactNo = contactNo;
+            this.EmailId = emailId;
+            this.State = state;
+            this.City = city;
+            this.Pincode = pincode;
+            this.FullAddress = fullAddress;
+            this.Password = password;
         }
 
         public MemberDTO()

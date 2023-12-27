@@ -2239,7 +2239,6 @@
     <Compile Include="Models\Author.cs" />
     <Compile Include="Models\BookDTO.cs" />
     <Compile Include="Models\LoginDto.cs" />
-    <Compile Include="Models\Member.cs" />
     <Compile Include="Models\MemberDTO.cs" />
     <Compile Include="Models\Publisher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
