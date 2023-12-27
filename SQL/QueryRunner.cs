@@ -16,7 +16,7 @@ namespace ELibraryManagement.SQL
     {
         private string strcon = ConfigurationManager.ConnectionStrings["con"].ConnectionString;
 
-        public void SignUpQueryRunner(Member member)
+        public void SignUpQueryRunner(MemberDTO member)
         {
             try
             {
@@ -31,9 +31,9 @@ namespace ELibraryManagement.SQL
                     "values( @full_name , @dob , @contact_no , @email , @state , @city , @pincode , @full_address , @member_id , @password , @account_status )", conn);
 
                 cmd.Parameters.Add("@full_name", SqlDbType.NVarChar).Value = member.FullName;
-                cmd.Parameters.Add("@dob", SqlDbType.NVarChar).Value = member.DateOfBirth;
-                cmd.Parameters.Add("@contact_no", SqlDbType.NVarChar).Value = member.ContactNumber;
-                cmd.Parameters.Add("@email", SqlDbType.NVarChar).Value = member.Email;
+                cmd.Parameters.Add("@dob", SqlDbType.NVarChar).Value = member.DOB;
+                cmd.Parameters.Add("@contact_no", SqlDbType.NVarChar).Value = member.ContactNo;
+                cmd.Parameters.Add("@email", SqlDbType.NVarChar).Value = member.EmailId;
                 cmd.Parameters.Add("@state", SqlDbType.NVarChar).Value = member.State;
                 cmd.Parameters.Add("@city", SqlDbType.NVarChar).Value = member.City;
                 cmd.Parameters.Add("@pincode", SqlDbType.NVarChar).Value = member.Pincode;
@@ -489,7 +489,7 @@ namespace ELibraryManagement.SQL
             {
                 conn.Open();
             }
-            SqlCommand cmd = new SqlCommand(" SELECT [full_name],[dob],[contact_no],[email],[state],[city],[pincode],[full_address],[member_id],[account_status] " +
+            SqlCommand cmd = new SqlCommand(" SELECT [full_name],[dob],[contact_no],[email],[state],[city],[pincode],[full_address],[member_id],[account_status],[password] " +
                 "FROM[elibraryDB].[dbo].[member_master_tbl] " +
                 "WHERE [member_id] = @member_id", conn);
             cmd.Parameters.Add("@member_id", SqlDbType.NVarChar).Value = memberId;
@@ -514,7 +514,8 @@ namespace ELibraryManagement.SQL
                         reader.GetValue(reader.GetOrdinal("state"))?.ToString(),
                         reader.GetValue(reader.GetOrdinal("city"))?.ToString(),
                         reader.GetValue(reader.GetOrdinal("pincode"))?.ToString(),
-                        reader.GetValue(reader.GetOrdinal("full_address"))?.ToString()
+                        reader.GetValue(reader.GetOrdinal("full_address"))?.ToString(),
+                        reader.GetValue(reader.GetOrdinal("password"))?.ToString()
                     );
                 }
             }
@@ -581,6 +582,12 @@ namespace ELibraryManagement.SQL
                 memberDetails["remarks"] = $"Internal Server Error: {ex.Message}";
                 return memberDetails;
             }
+        }
+
+        public void updateMember(MemberDTO member)
+        {
+            this.DeleteMemberById(member.MemberId);
+            this.SignUpQueryRunner(member);
         }
 
         public bool CheckIfBookExists(BookDTO bookDTO)
