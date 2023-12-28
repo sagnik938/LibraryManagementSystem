@@ -236,6 +236,14 @@
                                                    <asp:Label ID="Label12" runat="server" Font-Bold="True" Font-Italic="True" Font-Size="Smaller" Text='<%# Eval("BookDescription") %>'></asp:Label>
                                                                 </div>
                                                             </div>
+                                                             <div class="row">
+                                                                <div class="col-12">
+                                                                    Issue Date -
+                                                   <asp:Label ID="Label10" runat="server" Font-Bold="True" Font-Italic="True" Font-Size="Smaller" Text='<%# Eval("IssueDate") %>'></asp:Label>
+                                                                   &nbsp | Due Date -
+                                                   <asp:Label ID="Label11" runat="server" Font-Bold="True" Font-Italic="True" Font-Size="Smaller" Text='<%# Eval("DueDate") %>'></asp:Label>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                         <div class="col-lg-2">
                                                             <asp:Image class="img-fluid" ID="Image1" runat="server" ImageUrl='<%# Eval("ImagePath") %>' />
