@@ -28,7 +28,7 @@ namespace ELibraryManagement
 
         protected void PopulateGridView()
         {
-            var books = this.queryRunner.getAllBooksBorrowedByMemberId(Session["username"].ToString());
+            var books = this.queryRunner.GetAllBooksBorrowedByMemberId(Session["username"].ToString());
             GridView1.DataSource = books;
             GridView1.DataBind();
         }

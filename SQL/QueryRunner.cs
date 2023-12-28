@@ -774,7 +774,7 @@ namespace ELibraryManagement.SQL
             this.SaveBook(book);
         }
 
-        public List<BookDTO> getAllBooksBorrowedByMemberId(string memberId)
+        public List<BookDTO> GetAllBooksBorrowedByMemberId(string memberId)
         {
             List<BookDTO> books = new List<BookDTO>();
 
@@ -830,6 +830,36 @@ namespace ELibraryManagement.SQL
             }
 
             return books;
+        }
+
+        public bool BookIsIssued(string bookId)
+        {
+            bool isIssued = false;
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(this.strcon))
+                {
+                    connection.Open();
+
+                    string query = "SELECT COUNT(*) FROM [elibraryDB].[dbo].[book_issue_tbl] WHERE [book_id] = @BookId";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@BookId", bookId);
+
+                        int count = Convert.ToInt32(command.ExecuteScalar());
+
+                        // If count is greater than 0, it means the book is issued
+                        isIssued = count > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Internal Server Error");
+            }
+
+            return isIssued;
         }
     }
 }

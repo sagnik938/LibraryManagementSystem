@@ -247,6 +247,11 @@ namespace ELibraryManagement
             string book_id = TextBox1.Text.Trim();
             try
             {
+                if( queryRunner.BookIsIssued(book_id) )
+                {
+                    Response.Write("<script>alert('Book cannot be deleted is already issued to a member')</script>");
+                    return;
+                }
                 queryRunner.DeleteBook(book_id);
                 Response.Write("<script>alert('Book deleted')</script>");
 
