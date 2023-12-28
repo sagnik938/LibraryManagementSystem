@@ -783,21 +783,23 @@ namespace ELibraryManagement.SQL
                 connection.Open();
 
                 string query = @"
-                SELECT [book_id]
-                      ,[book_name]
-                      ,[genre]
-                      ,[author_name]
-                      ,[publisher_name]
-                      ,[publish_date]
-                      ,[language]
-                      ,[edition]
-                      ,[book_cost]
-                      ,[no_of_pages]
-                      ,[book_description]
-                      ,[book_img_link]
-                FROM [elibraryDB].[dbo].[book_master_tbl] 
-                WHERE [book_id] IN (SELECT book_id FROM book_issue_tbl WHERE member_id = @MemberId);
-            ";
+                                    SELECT [bm].[book_id]
+                                           ,[bm].[book_name]
+                                           ,[genre]
+                                           ,[author_name]
+                                           ,[publisher_name]
+                                           ,[publish_date]
+                                           ,[language]
+                                           ,[edition]
+                                           ,[book_cost]
+                                           ,[no_of_pages]
+                                           ,[book_description]
+                                           ,[book_img_link]
+	                                       ,[issue_date]
+	                                       ,[due_date]
+                                    FROM [elibraryDB].[dbo].[book_master_tbl] as bm JOIN [elibraryDB].[dbo].[book_issue_tbl] as bi on bm.book_id = bi.book_id 
+                                    WHERE bi.member_id= @MemberId;
+                                ";
 
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
@@ -820,7 +822,9 @@ namespace ELibraryManagement.SQL
                                 CostPerUnit = reader["book_cost"].ToString(),
                                 Pages = reader["no_of_pages"].ToString(),
                                 BookDescription = reader["book_description"].ToString(),
-                                ImagePath = reader["book_img_link"].ToString()
+                                ImagePath = reader["book_img_link"].ToString(),
+                                IssueDate = reader["issue_date"].ToString(),
+                                DueDate = reader["due_date"].ToString()
                             };
 
                             books.Add(book);

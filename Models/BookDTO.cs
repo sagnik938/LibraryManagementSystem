@@ -23,6 +23,8 @@ namespace ELibraryManagement.Models
         public string IssuedBooks { get; set; }
         public string BookDescription { get; set; }
 
+        public string IssueDate { get; set; }
+        public string DueDate { get; set; }
         public BookDTO()
         {
 
