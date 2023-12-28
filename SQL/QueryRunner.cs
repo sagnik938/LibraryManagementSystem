@@ -866,7 +866,7 @@ namespace ELibraryManagement.SQL
             return isIssued;
         }
 
-        public void ReturnBook( string bookId , string memberId )
+        public void ReturnBook(string bookId, string memberId)
         {
             try
             {
@@ -882,8 +882,15 @@ namespace ELibraryManagement.SQL
                 cmd.Parameters.Add("@book_id", SqlDbType.NVarChar).Value = bookId;
                 cmd.Parameters.Add("@member_id", SqlDbType.NVarChar).Value = memberId;
 
+                SqlCommand cmd_2 = new SqlCommand("update dbo.book_master_tbl " +
+                    "set current_stock = current_stock+1 , issued_books = issued_books-1 where book_id = @book_id", conn);
+
+                cmd_2.Parameters.Add("@book_id", SqlDbType.NVarChar).Value = bookId;
+
                 cmd.ExecuteNonQuery();
+                cmd_2.ExecuteNonQuery();
                 conn.Close();
+
             }
             catch (Exception ex)
             {
@@ -891,7 +898,7 @@ namespace ELibraryManagement.SQL
             }
         }
 
-        public void IssueBook( BookIssueDTO bookIssueDTO)
+        public void IssueBook(BookIssueDTO bookIssueDTO)
         {
             try
             {
@@ -913,12 +920,61 @@ namespace ELibraryManagement.SQL
 
                         command.ExecuteNonQuery();
                     }
+
+                    query = @"UPDATE dbo.book_master_tbl
+                              SET
+                                current_stock = current_stock - 1,
+                                issued_books = ISNULL(issued_books, 0) + 1
+                              WHERE
+                                book_id = @book_id; ";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@book_id", bookIssueDTO.BookId);
+                        command.ExecuteNonQuery();
+                    }
                 }
             }
             catch (Exception ex)
             {
                 // Handle exceptions, log errors, or throw as needed
                 throw ex;
+            }
+        }
+
+        public int GetCurrentStock(string bookId)
+        {
+            string sqlQuery = "SELECT current_stock FROM book_master_tbl WHERE book_id = @bookId";
+
+            using (SqlConnection connection = new SqlConnection(this.strcon))
+            using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+            {
+                // Add the book_id parameter to the SqlCommand
+                command.Parameters.AddWithValue("@bookId", bookId);
+
+                try
+                {
+                    // Open the connection
+                    connection.Open();
+
+                    // Execute the query and get the result
+                    object result = command.ExecuteScalar();
+
+                    // Check if the result is not null
+                    if (result != null && result != DBNull.Value)
+                    {
+                        // Convert the result to the appropriate data type (int in this case)
+                        int actualStock = Convert.ToInt32(result);
+                        return (actualStock);
+                    }
+                    else
+                    {
+                        return ( 0 );
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
             }
         }
     }

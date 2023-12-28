@@ -57,7 +57,7 @@ namespace ELibraryManagement
                         // Parse and set DueDate
                         if (DateTime.TryParse(bookiterator.DueDate, out DateTime dueDate))
                         {
-                            if( dueDate < DateTime.Now.ToLocalTime())
+                            if (dueDate < DateTime.Now.ToLocalTime())
                             {
                                 TextBox6.ForeColor = System.Drawing.Color.Red;
                                 TextBox6.BorderColor = System.Drawing.Color.Red;
@@ -89,7 +89,7 @@ namespace ELibraryManagement
 
         private bool inputValidationPopulator(string memberId, string bookId)
         {
-            if (memberId == null || bookId == null )
+            if (memberId == null || bookId == null)
             {
                 return false;
             }
@@ -97,7 +97,7 @@ namespace ELibraryManagement
             {
                 return false;
             }
-            if( this.queryRunner.getBookById(bookId) == null || this.queryRunner.getMemberById(memberId) == null)
+            if (this.queryRunner.getBookById(bookId) == null || this.queryRunner.getMemberById(memberId) == null)
             {
                 return false;
             }
@@ -110,9 +110,17 @@ namespace ELibraryManagement
             try
             {
                 var issueModel = new BookIssueDTO(TextBox1.Text, TextBox2.Text, TextBox4.Text, TextBox3.Text, TextBox5.Text, TextBox6.Text);
+
+                if( this.queryRunner.GetCurrentStock(TextBox1.Text) == 0 )
+                {
+                    Response.Write("<script>alert('Book not in stock currently')</script>");
+                    CleanForm();
+                    return;
+                }
                 this.queryRunner.IssueBook(issueModel);
                 Response.Write("<script>alert('Book Issued')</script>");
                 this.CleanForm();
+                GridView1.DataBind();
             }
             catch
             {
@@ -128,6 +136,7 @@ namespace ELibraryManagement
                 this.queryRunner.ReturnBook(TextBox1.Text, TextBox2.Text);
                 Response.Write("<script>alert('Book returned')</script>");
                 this.CleanForm();
+                GridView1.DataBind();
             }
             catch
             {
@@ -155,6 +164,27 @@ namespace ELibraryManagement
         {
             TextBox6.Attributes["min"] = TextBox5.Text;
             TextBox6.ReadOnly = false;
+        }
+
+        protected void GridView1_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            try
+            {
+                if (e.Row.RowType == DataControlRowType.DataRow)
+                {
+                    //Check your condition here
+                    DateTime dt = Convert.ToDateTime(e.Row.Cells[5].Text);
+                    DateTime today = DateTime.Today;
+                    if (today > dt)
+                    {
+                        e.Row.BackColor = System.Drawing.Color.PaleVioletRed;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Response.Write("<script>alert('" + ex.Message + "');</script>");
+            }
         }
     }
 }
