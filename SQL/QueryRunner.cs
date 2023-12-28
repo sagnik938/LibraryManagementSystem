@@ -773,5 +773,93 @@ namespace ELibraryManagement.SQL
             this.DeleteBook(book.BookId);
             this.SaveBook(book);
         }
+
+        public List<BookDTO> GetAllBooksBorrowedByMemberId(string memberId)
+        {
+            List<BookDTO> books = new List<BookDTO>();
+
+            using (SqlConnection connection = new SqlConnection(this.strcon))
+            {
+                connection.Open();
+
+                string query = @"
+                SELECT [book_id]
+                      ,[book_name]
+                      ,[genre]
+                      ,[author_name]
+                      ,[publisher_name]
+                      ,[publish_date]
+                      ,[language]
+                      ,[edition]
+                      ,[book_cost]
+                      ,[no_of_pages]
+                      ,[book_description]
+                      ,[book_img_link]
+                FROM [elibraryDB].[dbo].[book_master_tbl] 
+                WHERE [book_id] IN (SELECT book_id FROM book_issue_tbl WHERE member_id = @MemberId);
+            ";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@MemberId", memberId);
+
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            BookDTO book = new BookDTO
+                            {
+                                BookId = reader["book_id"].ToString(),
+                                BookName = reader["book_name"].ToString(),
+                                Genre = reader["genre"].ToString(),
+                                AuthorName = reader["author_name"].ToString(),
+                                PublisherName = reader["publisher_name"].ToString(),
+                                PublisherDate = reader["publish_date"].ToString(),
+                                Language = reader["language"].ToString(),
+                                Edition = reader["edition"].ToString(),
+                                CostPerUnit = reader["book_cost"].ToString(),
+                                Pages = reader["no_of_pages"].ToString(),
+                                BookDescription = reader["book_description"].ToString(),
+                                ImagePath = reader["book_img_link"].ToString()
+                            };
+
+                            books.Add(book);
+                        }
+                    }
+                }
+            }
+
+            return books;
+        }
+
+        public bool BookIsIssued(string bookId)
+        {
+            bool isIssued = false;
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(this.strcon))
+                {
+                    connection.Open();
+
+                    string query = "SELECT COUNT(*) FROM [elibraryDB].[dbo].[book_issue_tbl] WHERE [book_id] = @BookId";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@BookId", bookId);
+
+                        int count = Convert.ToInt32(command.ExecuteScalar());
+
+                        // If count is greater than 0, it means the book is issued
+                        isIssued = count > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Internal Server Error");
+            }
+
+            return isIssued;
+        }
     }
 }
