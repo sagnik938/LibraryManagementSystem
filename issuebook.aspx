@@ -3,8 +3,8 @@
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
     <script type="text/javascript">
         $(document).ready(function () {
-            $(".table").prepend($("< thead ></thead > ").append($(this).find("tr: first"))).dataTable();
-       });
+            $(".table").prepend($("<thead></thead>").append($(this).find("tr:first"))).dataTable();
+        });
     </script>
 
 </asp:Content>
@@ -111,7 +111,7 @@
                         <div class="row">
                             <div class="col">
                                 <asp:SqlDataSource ID="SqlDataSource1" runat="server" ConnectionString="<%$ ConnectionStrings:elibraryDBConnectionString %>" SelectCommand="SELECT * FROM [book_issue_tbl]"></asp:SqlDataSource>
-                                <asp:GridView class="table table-striped table-bordered" ID="GridView1" runat="server" AutoGenerateColumns="False" DataKeyNames="member_id,book_id" DataSourceID="SqlDataSource1" OnRowDataBound="GridView1_RowDataBound">
+                                <asp:GridView class="table table-striped table-bordered" ID="GridView1" runat="server" AutoGenerateColumns="False" DataKeyNames="member_id,book_id" DataSourceID="SqlDataSource1">
                                     <Columns>
                                         <asp:BoundField DataField="member_id" HeaderText="member_id" ReadOnly="True" SortExpression="member_id" />
                                         <asp:BoundField DataField="member_name" HeaderText="member_name" SortExpression="member_name" />
