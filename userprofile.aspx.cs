@@ -23,6 +23,14 @@ namespace ELibraryManagement
             {
                 this.PopulateForm();
             }
+            PopulateGridView();
+        }
+
+        protected void PopulateGridView()
+        {
+            var books = this.queryRunner.getAllBooksBorrowedByMemberId(Session["username"].ToString());
+            GridView1.DataSource = books;
+            GridView1.DataBind();
         }
 
         protected void PopulateForm()
