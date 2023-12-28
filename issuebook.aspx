@@ -39,7 +39,7 @@
                                 <div class="form-group">
                                     <div class="input-group">
                                         <asp:TextBox CssClass="form-control" ID="TextBox1" runat="server" placeholder="Book ID"></asp:TextBox>
-                                        <asp:Button class="btn btn-primary" ID="Button1" runat="server" Text="Go" />
+                                        <asp:Button class="btn btn-primary" ID="Button1" runat="server" Text="Go" OnClick="Button1_Click" />
                                     </div>
                                 </div>
                             </div>
@@ -62,24 +62,24 @@
                             <div class="col-md-6">
                                 <label>Start Date</label>
                                 <div class="form-group">
-                                    <asp:TextBox CssClass="form-control" ID="TextBox5" runat="server" placeholder="Start Date" TextMode="Date"></asp:TextBox>
+                                    <asp:TextBox CssClass="form-control" ID="TextBox5" runat="server" placeholder="Start Date" TextMode="Date" AutoPostBack="True" OnTextChanged="TextBox5_TextChanged" ReadOnly="True"></asp:TextBox>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label>End Date</label>
                                 <div class="form-group">
-                                    <asp:TextBox CssClass="form-control" ID="TextBox6" runat="server" placeholder="End Date" TextMode="Date"></asp:TextBox>
+                                    <asp:TextBox CssClass="form-control" ID="TextBox6" runat="server" placeholder="End Date" TextMode="Date" ReadOnly="True"></asp:TextBox>
                                 </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-6 d-grid gap-2">
                                 <br />
-                                <asp:Button ID="Button2" class="btn btn-block btn-primary" runat="server" Text="Issue" />
+                                <asp:Button ID="Button2" class="btn btn-block btn-primary" runat="server" Text="Issue" Enabled="False" OnClick="Button2_Click" />
                             </div>
                             <div class="col-6 d-grid gap-2">
                                 <br />
-                                <asp:Button ID="Button4" class="btn btn-block btn-success" runat="server" Text="Return" />
+                                <asp:Button ID="Button4" class="btn btn-block btn-success" runat="server" Text="Return" Enabled="False" OnClick="Button4_Click" />
                             </div>
                         </div>
                     </div>

@@ -2238,6 +2238,7 @@
     </Compile>
     <Compile Include="Models\Author.cs" />
     <Compile Include="Models\BookDTO.cs" />
+    <Compile Include="Models\BookIssueDTO.cs" />
     <Compile Include="Models\LoginDto.cs" />
     <Compile Include="Models\MemberDTO.cs" />
     <Compile Include="Models\Publisher.cs" />

@@ -865,5 +865,61 @@ namespace ELibraryManagement.SQL
 
             return isIssued;
         }
+
+        public void ReturnBook( string bookId , string memberId )
+        {
+            try
+            {
+                SqlConnection conn = new SqlConnection(this.strcon);
+                if (conn.State == ConnectionState.Closed)
+                {
+                    conn.Open();
+                }
+
+                SqlCommand cmd = new SqlCommand("delete from dbo.book_issue_tbl " +
+                    "where book_id = @book_id and member_id = @member_id", conn);
+
+                cmd.Parameters.Add("@book_id", SqlDbType.NVarChar).Value = bookId;
+                cmd.Parameters.Add("@member_id", SqlDbType.NVarChar).Value = memberId;
+
+                cmd.ExecuteNonQuery();
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public void IssueBook( BookIssueDTO bookIssueDTO)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(this.strcon))
+                {
+                    connection.Open();
+
+                    string query = "INSERT INTO book_issue_tbl (member_id, member_name, book_id, book_name, issue_date, due_date) " +
+                                   "VALUES (@MemberId, @MemberName, @BookId, @BookName, @IssueDate, @DueDate)";
+
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@MemberId", bookIssueDTO.MemberId);
+                        command.Parameters.AddWithValue("@MemberName", bookIssueDTO.MemberName);
+                        command.Parameters.AddWithValue("@BookId", bookIssueDTO.BookId);
+                        command.Parameters.AddWithValue("@BookName", bookIssueDTO.BookName);
+                        command.Parameters.AddWithValue("@IssueDate", bookIssueDTO.IssueDate);
+                        command.Parameters.AddWithValue("@DueDate", bookIssueDTO.DueDate);
+
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions, log errors, or throw as needed
+                throw ex;
+            }
+        }
     }
 }
