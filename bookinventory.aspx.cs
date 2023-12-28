@@ -14,7 +14,6 @@ namespace ELibraryManagement
     public partial class bookinventory : System.Web.UI.Page
     {
         private QueryRunner queryRunner = new QueryRunner();
-        private string trailingSpaces = "         ";
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["role"] == null || Session["role"].Equals(UserTypes.USER.ToString()) )
@@ -73,8 +72,22 @@ namespace ELibraryManagement
             TextBox11.Text = book.Pages.Trim();
 
             DropDownList1.SelectedValue = book.Language;
-            DropDownList2.SelectedValue = (book.PublisherName.Length==10)? book.PublisherName : book.PublisherName + trailingSpaces;
-            DropDownList3.SelectedValue = (book.AuthorName.Length == 10) ? book.AuthorName : book.AuthorName + trailingSpaces;
+            foreach(ListItem li in DropDownList2.Items)
+            {
+                if(li.Text .Equals(book.PublisherName))
+                {
+                    li.Selected = true;
+                    break;
+                }
+            }
+            foreach (ListItem li in DropDownList3.Items)
+            {
+                if (li.Text.Equals(book.AuthorName))
+                {
+                    li.Selected = true;
+                    break;
+                }
+            }
 
             string[] listBoxSelections = book.Genre.Split(',');
             foreach( string listBoxSelection in listBoxSelections)
@@ -116,8 +129,8 @@ namespace ELibraryManagement
                     TextBox1.Text.Trim(),
                     TextBox2.Text.Trim(),
                     DropDownList1.SelectedValue.Trim(),
-                    DropDownList2.SelectedValue.Trim(),
-                    DropDownList3.SelectedValue.Trim(),
+                    DropDownList2.SelectedItem.Text.Trim(),
+                    DropDownList3.SelectedItem.Text.Trim(),
                     genres,
                     TextBox3.Text.Trim(),
                     TextBox9.Text.Trim(),
@@ -205,8 +218,8 @@ namespace ELibraryManagement
                     TextBox1.Text.Trim(),
                     TextBox2.Text.Trim(),
                     DropDownList1.SelectedValue.Trim(),
-                    DropDownList2.SelectedValue.Trim(),
-                    DropDownList3.SelectedValue.Trim(),
+                    DropDownList2.SelectedItem.Text.Trim(),
+                    DropDownList3.SelectedItem.Text.Trim(),
                     genres,
                     TextBox3.Text.Trim(),
                     TextBox9.Text.Trim(),
