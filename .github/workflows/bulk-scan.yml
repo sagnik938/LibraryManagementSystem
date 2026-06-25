@@ -1,0 +1,285 @@
+name: Bulk Code Quality Scan
+
+on:
+  workflow_dispatch: # Run manually once from Actions tab
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  bulk-scan:
+    name: Full Codebase Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # ─── SCAN 1: Build + Roslyn Analyzers ───────────────────────────
+      - name: Run build with analyzers
+        id: build
+        continue-on-error: true
+        run: |
+          dotnet build --no-restore -warnaserror 2>&1 | tee build_output.txt
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      # ─── SCAN 2: Formatting ─────────────────────────────────────────
+      - name: Run format check
+        id: format
+        continue-on-error: true
+        run: |
+          dotnet format --verify-no-changes 2>&1 | tee format_output.txt
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      # ─── SCAN 3: Security (DevSkim) ─────────────────────────────────
+      - name: Install DevSkim security scanner
+        run: dotnet tool install -g Microsoft.CST.DevSkim.CLI
+
+      - name: Run DevSkim security scan
+        id: security
+        continue-on-error: true
+        run: |
+          devskim analyze --source-code . --output-file security_output.json --output-format sarif 2>&1 | tee security_output.txt
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      # ─── PARSE + CREATE ISSUES ──────────────────────────────────────
+      - name: Upload raw scan artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bulk-scan-results
+          path: |
+            build_output.txt
+            format_output.txt
+            security_output.txt
+            security_output.json
+
+      - name: Parse results and create GitHub Issues
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // ── Helpers ──────────────────────────────────────────────
+            async function issueExists(title) {
+              const existing = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: 'auto-detected',
+                state: 'open',
+                per_page: 100
+              });
+              return existing.data.some(i => i.title === title);
+            }
+
+            async function createIssue(title, body, labels) {
+              if (await issueExists(title)) {
+                console.log(`⚠️  Already exists, skipping: ${title}`);
+                return;
+              }
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels
+              });
+              console.log(`✅ Created: ${title}`);
+            }
+
+            // ── SCAN 1: Parse build/analyzer output ──────────────────
+            const buildRaw = fs.existsSync('build_output.txt')
+              ? fs.readFileSync('build_output.txt', 'utf8')
+              : '';
+
+            // Match lines like: src/File.cs(12,5): error CS0219: message
+            // or:               src/File.cs(12,5): warning CA1822: message
+            const buildPattern = /([^\s]+\.cs)\((\d+),(\d+)\):\s*(error|warning)\s+(CS\w+|CA\w+|SA\w+)[^:]*:\s*(.+)/g;
+            let match;
+            const buildIssues = [];
+
+            while ((match = buildPattern.exec(buildRaw)) !== null) {
+              buildIssues.push({
+                file:    match[1],
+                line:    match[2],
+                col:     match[3],
+                level:   match[4],
+                code:    match[5],
+                message: match[6].trim()
+              });
+            }
+
+            console.log(`Found ${buildIssues.length} build/analyzer violations`);
+
+            for (const v of buildIssues) {
+              const isError = v.level === 'error';
+              const title = `[${v.code}] ${v.message.slice(0, 80)}`;
+              const labels = isError
+                ? ['bug', 'dotnet', 'auto-detected']
+                : ['code-quality', 'dotnet', 'auto-detected'];
+
+              const body = [
+                `## ${isError ? '🔴 Build Error' : '🟡 Analyzer Warning'}: \`${v.code}\``,
+                ``,
+                `| Field | Value |`,
+                `|-------|-------|`,
+                `| **File** | \`${v.file}\` |`,
+                `| **Line** | ${v.line} |`,
+                `| **Column** | ${v.col} |`,
+                `| **Code** | \`${v.code}\` |`,
+                `| **Severity** | ${v.level} |`,
+                ``,
+                `### Message`,
+                `\`\`\``,
+                v.message,
+                `\`\`\``,
+                ``,
+                `### How to fix`,
+                `1. Open the file in Cursor: \`${v.file}\` at line ${v.line}`,
+                `2. Press \`Ctrl+L\` to open Cursor chat`,
+                `3. Paste this prompt:`,
+                `\`\`\``,
+                `Fix analyzer violation ${v.code} at line ${v.line}: ${v.message}`,
+                `\`\`\``,
+                ``,
+                `---`,
+                `_Auto-detected by Bulk Code Quality Scan_`
+              ].join('\n');
+
+              await createIssue(title, body, labels);
+            }
+
+            // ── SCAN 2: Parse formatting output ──────────────────────
+            const formatRaw = fs.existsSync('format_output.txt')
+              ? fs.readFileSync('format_output.txt', 'utf8')
+              : '';
+
+            // Match lines like: /path/to/File.cs: failed to format
+            const formatPattern = /([^\s]+\.cs)[^\n]*formatted/gi;
+            const formatFiles = new Set();
+
+            let fmatch;
+            while ((fmatch = formatPattern.exec(formatRaw)) !== null) {
+              formatFiles.add(fmatch[1]);
+            }
+
+            // Fallback: if output mentions files differently
+            if (formatFiles.size === 0 && formatRaw.includes('Formatted')) {
+              const fallback = /Formatted\s+([^\s]+\.cs)/g;
+              let fm;
+              while ((fm = fallback.exec(formatRaw)) !== null) {
+                formatFiles.add(fm[1]);
+              }
+            }
+
+            console.log(`Found ${formatFiles.size} formatting violations`);
+
+            for (const file of formatFiles) {
+              const title = `[Formatting] ${file} has formatting issues`;
+              const body = [
+                `## 🟡 Formatting Violation`,
+                ``,
+                `| Field | Value |`,
+                `|-------|-------|`,
+                `| **File** | \`${file}\` |`,
+                `| **Type** | Code formatting |`,
+                ``,
+                `### How to fix`,
+                `Run in your terminal:`,
+                `\`\`\`powershell`,
+                `dotnet format`,
+                `\`\`\``,
+                `Or fix in Cursor:`,
+                `1. Open \`${file}\` in Cursor`,
+                `2. Press \`Ctrl+L\` and paste:`,
+                `\`\`\``,
+                `Fix all formatting issues in this file to match dotnet format standards`,
+                `\`\`\``,
+                ``,
+                `---`,
+                `_Auto-detected by Bulk Code Quality Scan_`
+              ].join('\n');
+
+              await createIssue(title, body, ['code-quality', 'dotnet', 'auto-detected']);
+            }
+
+            // ── SCAN 3: Parse DevSkim security output ─────────────────
+            let securityFindings = [];
+
+            if (fs.existsSync('security_output.json')) {
+              try {
+                const sarifRaw = fs.readFileSync('security_output.json', 'utf8');
+                const sarif = JSON.parse(sarifRaw);
+                const runs = sarif.runs || [];
+
+                for (const run of runs) {
+                  const results = run.results || [];
+                  for (const result of results) {
+                    const loc = result.locations?.[0]?.physicalLocation;
+                    securityFindings.push({
+                      ruleId:  result.ruleId || 'UNKNOWN',
+                      message: result.message?.text || 'Security issue detected',
+                      file:    loc?.artifactLocation?.uri || 'unknown',
+                      line:    loc?.region?.startLine || 0
+                    });
+                  }
+                }
+              } catch(e) {
+                console.log('Could not parse SARIF security output:', e.message);
+              }
+            }
+
+            console.log(`Found ${securityFindings.length} security findings`);
+
+            for (const finding of securityFindings) {
+              const title = `[Security][${finding.ruleId}] ${finding.message.slice(0, 80)}`;
+              const body = [
+                `## 🔴 Security Finding: \`${finding.ruleId}\``,
+                ``,
+                `| Field | Value |`,
+                `|-------|-------|`,
+                `| **File** | \`${finding.file}\` |`,
+                `| **Line** | ${finding.line} |`,
+                `| **Rule** | \`${finding.ruleId}\` |`,
+                ``,
+                `### Message`,
+                `\`\`\``,
+                finding.message,
+                `\`\`\``,
+                ``,
+                `### How to fix`,
+                `1. Open \`${finding.file}\` in Cursor at line ${finding.line}`,
+                `2. Press \`Ctrl+L\` to open Cursor chat`,
+                `3. Paste this prompt:`,
+                `\`\`\``,
+                `Fix security vulnerability ${finding.ruleId} at line ${finding.line}: ${finding.message}`,
+                `\`\`\``,
+                ``,
+                `> ⚠️ Security issues should be reviewed by a developer before closing.`,
+                ``,
+                `---`,
+                `_Auto-detected by Bulk Code Quality Scan_`
+              ].join('\n');
+
+              await createIssue(title, body, ['security', 'dotnet', 'auto-detected']);
+            }
+
+            // ── Summary comment on workflow run ───────────────────────
+            const total = buildIssues.length + formatFiles.size + securityFindings.length;
+            console.log(`\n========================================`);
+            console.log(`  BULK SCAN COMPLETE`);
+            console.log(`  Build/Analyzer violations : ${buildIssues.length}`);
+            console.log(`  Formatting violations     : ${formatFiles.size}`);
+            console.log(`  Security findings         : ${securityFindings.length}`);
+            console.log(`  Total issues created      : ${total}`);
+            console.log(`========================================`);
